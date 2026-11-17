@@ -33,7 +33,7 @@ use_system_libraries = bool_from_environ("USE_SYSTEM_LIBS")
 use_cython_linetrace = bool_from_environ("CYTHON_LINETRACE")
 use_cython_annotate = bool_from_environ("CYTHON_ANNOTATE")
 # The cp310 Limited API is unavailable on free-threaded CPython. Build against
-# that interpreter's full ABI, keeping Cython's existing GIL safety policy.
+# that interpreter's full ABI.
 # Set USE_PY_LIMITED_API=0 to turn it off.
 # https://docs.python.org/3.14/c-api/stable.html#limited-c-api
 use_py_limited_api = bool_from_environ(
@@ -99,7 +99,7 @@ def _configure_extensions_with_vendored_libs() -> List[Extension]:
     # We build with HB_EXPERIMENTAL_API to enable experimental HarfBuzz features
     # like VARC table support, but we must not use any experimental APIs as it
     # will break linking with system HarfBuzz that is built without these APIs.
-    define_macros = [("HB_NO_MT", "1"), ("HB_EXPERIMENTAL_API", "1")]
+    define_macros = [("HB_EXPERIMENTAL_API", "1")]
     if use_cython_linetrace:
         define_macros.append(("CYTHON_TRACE_NOGIL", "1"))
 
@@ -189,7 +189,7 @@ setup(
     ext_modules=cythonize(
         configure_extensions(),
         annotate=use_cython_annotate,
-        compiler_directives={"linetrace": use_cython_linetrace},
+        compiler_directives={"linetrace": use_cython_linetrace, "freethreading_compatible": True},
     ),
     options={"bdist_wheel": {"py_limited_api": "cp310"}} if use_py_limited_api else {},
 )

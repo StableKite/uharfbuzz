@@ -11,10 +11,8 @@ build-backend = "setuptools.build_meta"
 [tool.setuptools_scm]
 
 [tool.cibuildwheel]
-# Also skip wheels for free-threaded CPython 3.14 (e.g. 'cp314t') until we
-# actually support them. We currently aren't thread-safe as we define HB_NO_MT=1.
 # CPython abi3 wheels only need universal2 on macOS, skip the single-arch builds.
-skip = ["cp38-*", "cp39-*", "cp3??t-*", "cp*-macosx_x86_64", "cp*-macosx_arm64"]
+skip = ["cp38-*", "cp39-*", "cp*-macosx_x86_64", "cp*-macosx_arm64"]
 enable = ["pypy"]
 test-requires = "pytest"
 test-command = "pytest {project}/tests"
@@ -29,7 +27,7 @@ archs = ["native"]
 # https://github.com/pypa/abi3audit
 # Only on Unix platforms (Linux/macOS) since Windows has no default repair command
 [[tool.cibuildwheel.overrides]]
-select = "cp*-{linux,macosx}*"
+select = "cp3[0-9][0-9]-{manylinux,musllinux,macosx}*"
 inherit.repair-wheel-command = "append"
 repair-wheel-command = "pipx run abi3audit --strict --report {wheel}"
 
