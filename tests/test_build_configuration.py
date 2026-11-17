@@ -1,7 +1,7 @@
-"""Inspect actual setup metadata without recompiling extensions in each case."""
+"""Execute setup's ABI selection without requiring build tools in wheel tests."""
+import ast
 import os
 from pathlib import Path
-import runpy
 import sysconfig
 from unittest.mock import patch
 
@@ -28,15 +28,18 @@ def test_native_abi_selection(free_threaded, requested, expected):
     environment.pop("USE_PY_LIMITED_API", None)
     if requested is not None:
         environment["USE_PY_LIMITED_API"] = requested
+    tree = ast.parse(script.read_text(encoding="utf-8"))
+    statements = [
+        node for node in tree.body
+        if (isinstance(node, ast.FunctionDef) and node.name == "bool_from_environ")
+        or (isinstance(node, ast.Assign) and any(
+            isinstance(target, ast.Name) and target.id == "use_py_limited_api"
+            for target in node.targets
+        ))
+    ]
+    namespace = {"os": os, "sysconfig": sysconfig}
     with patch.dict(os.environ, environment, clear=True), patch.object(
         sysconfig, "get_config_var", config
-    ), patch("Cython.Build.cythonize", side_effect=lambda extensions, **kw: extensions), patch(
-        "setuptools.setup"
-    ) as setup:
-        runpy.run_path(str(script), run_name="__main__")
-    metadata = setup.call_args.kwargs
-    assert metadata["ext_modules"]
-    for extension in metadata["ext_modules"]:
-        assert extension.py_limited_api is expected
-        assert ("Py_LIMITED_API" in dict(extension.define_macros)) is expected
-    assert ("bdist_wheel" in metadata["options"]) is expected
+    ):
+        exec(compile(ast.Module(body=statements, type_ignores=[]), str(script), "exec"), namespace)
+    assert namespace["use_py_limited_api"] is expected
