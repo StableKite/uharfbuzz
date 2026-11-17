@@ -2,7 +2,7 @@ name: Build + Deploy
 
 on:
   push:
-    branches: [main]
+    branches: [main, codex/freethreading-upstream]
     tags: ["v*.*.*"]
   pull_request:
     branches: [main]
