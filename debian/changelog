@@ -1,0 +1,5 @@
+uharfbuzz (0.53.3-1) unstable; urgency=medium
+
+  * Initial release. (Closes: #1128252)
+
+ -- Boyuan Yang <byang@debian.org>  Mon, 16 Feb 2026 18:28:32 -0500

@@ -1,0 +1,10 @@
+#!/usr/bin/make -f
+
+export DEB_BUILD_MAINT_OPTIONS = hardening=+all
+
+export USE_SYSTEM_LIBS := 1
+# Git compatibility branches retain the release version declared by Debian.
+export SETUPTOOLS_SCM_PRETEND_VERSION_FOR_UHARFBUZZ := $(shell dpkg-parsechangelog -SVersion | sed 's/^[0-9]*://; s/-[^-]*$$//')
+
+%:
+	dh $@ --buildsystem=pybuild
