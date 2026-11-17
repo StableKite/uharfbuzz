@@ -17,6 +17,14 @@ import uharfbuzz as hb
 FONT = Path(__file__).parent / "data/OpenSans.subset.ttf"
 
 
+def collect_native_owners():
+    # cpyext proxies and cascaded native destructors can need multiple GC
+    # cycles (notably on PyPy). Keep the eventual weakref assertion below;
+    # a real retained strong reference still fails this bounded check.
+    for _ in range(8):
+        gc.collect()
+
+
 def font():
     return hb.Font(hb.Face(FONT.read_bytes()))
 
@@ -156,7 +164,7 @@ def test_callback_userdata_and_parent_are_retained():
     assert alive() is not None  # Check before invoking a formerly dangling pointer.
     assert child.get_glyph_h_advance(1) == 471
     del child
-    gc.collect()
+    collect_native_owners()
     assert alive() is None
 
 
@@ -187,7 +195,7 @@ def test_face_table_callback_owns_data_and_returned_bytes():
     gc.collect()
     assert f.get_nominal_glyph(ord("A")) is not None
     del f, blob
-    gc.collect()
+    collect_native_owners()
     assert alive() is None
 
 
