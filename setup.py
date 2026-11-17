@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 import os
 import platform
+import sysconfig
 from io import open
 from typing import List
 
@@ -31,10 +32,13 @@ with open(os.path.join(here, "README.md"), encoding="utf-8") as f:
 use_system_libraries = bool_from_environ("USE_SYSTEM_LIBS")
 use_cython_linetrace = bool_from_environ("CYTHON_LINETRACE")
 use_cython_annotate = bool_from_environ("CYTHON_ANNOTATE")
-# Python Limited API for stable ABI support is enabled by default.
+# The cp310 Limited API is unavailable on free-threaded CPython. Build against
+# that interpreter's full ABI, keeping Cython's existing GIL safety policy.
 # Set USE_PY_LIMITED_API=0 to turn it off.
 # https://docs.python.org/3.14/c-api/stable.html#limited-c-api
-use_py_limited_api = bool_from_environ("USE_PY_LIMITED_API", default=True)
+use_py_limited_api = bool_from_environ(
+    "USE_PY_LIMITED_API", default=not sysconfig.get_config_var("Py_GIL_DISABLED")
+)
 # NOTE: this must be kept in sync with python_requires='>=3.10' below
 limited_api_min_version = "0x030A0000"
 
